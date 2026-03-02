@@ -67,19 +67,6 @@
                 </p>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Zip Code
-                </label>
-                <input type="text" name="zip_code" required pattern="[0-9]{5}"
-                    class="block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="44130"
-                    value="{{ zip_code if zip_code else '' }}">
-                <p class="mt-1 text-sm text-gray-500">
-                    Since Redfin CSV doesn't include zip codes, enter the zip code for these properties
-                </p>
-            </div>
-
             <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-medium">
                 Import Properties
             </button>

@@ -23,7 +23,6 @@ async def import_page(request: Request):
 async def process_import(
     request: Request,
     file: UploadFile = File(...),
-    zip_code: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """Process CSV import."""
@@ -35,7 +34,7 @@ async def process_import(
 
     # Parse CSV
     try:
-        properties_data = parse_redfin_csv(csv_content, zip_code)
+        properties_data = parse_redfin_csv(csv_content)
     except Exception as e:
         return templates.TemplateResponse(
             "import.html",
@@ -52,7 +51,6 @@ async def process_import(
         "import.html",
         {
             "request": request,
-            "summary": summary,
-            "zip_code": zip_code
+            "summary": summary
         }
     )

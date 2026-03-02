@@ -70,13 +70,24 @@ def extract_city_from_url(url: str) -> str | None:
     return None
 
 
-def parse_redfin_csv(csv_content: str, zip_code: str) -> List[Dict[str, Any]]:
+def extract_zip_from_url(url: str) -> str | None:
+    """Extract zip code from Redfin URL like .../6749-Rockridge-Ct-44130/..."""
+    if not url:
+        return None
+    # Look for 5-digit zip code pattern in the URL path
+    match = re.search(r'-(\d{5})(?:/|$)', url)
+    if match:
+        return match.group(1)
+    return None
+
+
+def parse_redfin_csv(csv_content: str) -> List[Dict[str, Any]]:
     """
     Parse Redfin CSV content and return list of property dictionaries.
 
     CSV columns:
     - Column 0: "address" -> address
-    - Column 1: "address href" -> redfin_url (extract city from URL)
+    - Column 1: "address href" -> redfin_url (extract city and zip from URL)
     - Column 2: "location" -> neighborhood
     - Column 3: "column" -> price
     - Column 4: "column 2" -> beds
@@ -100,7 +111,7 @@ def parse_redfin_csv(csv_content: str, zip_code: str) -> List[Dict[str, Any]]:
             "address": address,
             "redfin_url": redfin_url,
             "city": extract_city_from_url(redfin_url),
-            "zip_code": zip_code,
+            "zip_code": extract_zip_from_url(redfin_url),
             "neighborhood": str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else None,
             "price": parse_price(str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""),
             "beds": parse_beds(str(row.iloc[4]) if pd.notna(row.iloc[4]) else ""),
