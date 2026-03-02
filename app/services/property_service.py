@@ -280,3 +280,29 @@ class PropertyService:
         return self.db.query(Property).filter(
             Property.workflow_status == WorkflowStatus.NEW
         ).order_by(Property.first_seen.desc()).limit(limit).all()
+
+    def has_price_change(self, property_id: int) -> bool:
+        """Check if a property has had price changes (more than 1 price history entry)."""
+        count = self.db.query(PriceHistory).filter(
+            PriceHistory.property_id == property_id
+        ).count()
+        return count > 1
+
+    def get_properties_with_price_changes(self) -> set:
+        """Get set of property IDs that have price changes."""
+        from sqlalchemy import func
+        results = self.db.query(PriceHistory.property_id).group_by(
+            PriceHistory.property_id
+        ).having(func.count(PriceHistory.id) > 1).all()
+        return {r[0] for r in results}
+
+    def delete_property(self, property_id: int) -> bool:
+        """Delete a property and all related data."""
+        property_obj = self.get_by_id(property_id)
+        if not property_obj:
+            return False
+
+        # Cascade delete will handle related records (price_history, status_history, notes)
+        self.db.delete(property_obj)
+        self.db.commit()
+        return True

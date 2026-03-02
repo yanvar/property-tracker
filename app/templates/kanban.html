@@ -19,8 +19,11 @@
                 <div class="p-2 min-h-[500px] kanban-column" data-status="{{ status }}">
                     {% for property in columns[status] %}
                     {% set is_expired = property.follow_up_date and today and property.follow_up_date <= today %}
+                    {% set has_price_change = property.id in price_changed_ids %}
                     <div class="kanban-card rounded-lg shadow p-4 mb-2 cursor-move
-                                {% if is_expired %}bg-red-50 border-2 border-red-400{% else %}bg-white{% endif %}"
+                                {% if is_expired %}bg-red-50 border-2 border-red-400
+                                {% elif has_price_change %}bg-green-50 border-2 border-green-400
+                                {% else %}bg-white{% endif %}"
                          data-id="{{ property.id }}"
                          hx-get="/properties/{{ property.id }}"
                          hx-target="#detail-panel"
@@ -28,6 +31,9 @@
                         <div class="font-medium text-gray-900 text-sm">{{ property.address }}</div>
                         <div class="mt-1 text-lg font-bold text-gray-900">
                             ${{ "{:,.0f}".format(property.price / 100) if property.price else 'N/A' }}
+                            {% if has_price_change %}
+                            <span class="ml-1 text-xs text-green-600 font-normal">(changed)</span>
+                            {% endif %}
                         </div>
                         <div class="mt-1 text-xs text-gray-500">
                             {{ property.beds }}bd / {{ property.baths }}ba / {{ "{:,}".format(property.sqft) if property.sqft else '?' }} sqft

@@ -42,6 +42,9 @@ async def kanban_board(request: Request, db: Session = Depends(get_db)):
             properties = sort_by_expired_first(properties)
         columns[status.value] = properties
 
+    # Get properties with price changes
+    price_changed_ids = service.get_properties_with_price_changes()
+
     return templates.TemplateResponse(
         "kanban.html",
         {
@@ -49,6 +52,7 @@ async def kanban_board(request: Request, db: Session = Depends(get_db)):
             "columns": columns,
             "statuses": [s.value for s in WorkflowStatus],
             "today": today,
+            "price_changed_ids": price_changed_ids,
         }
     )
 

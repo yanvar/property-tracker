@@ -234,3 +234,20 @@ async def delete_note(
         "partials/notes_list.html",
         {"request": request, "notes": notes, "property_id": property_id}
     )
+
+
+@router.delete("/{property_id}")
+async def delete_property(
+    request: Request,
+    property_id: int,
+    db: Session = Depends(get_db)
+):
+    """Delete a property and all related data."""
+    service = PropertyService(db)
+    success = service.delete_property(property_id)
+
+    if not success:
+        return HTMLResponse(content="Property not found", status_code=404)
+
+    # Return empty response - the UI will handle redirect/refresh
+    return HTMLResponse(content="", status_code=200)
