@@ -1,0 +1,47 @@
+/* Custom styles for Property Tracker */
+
+/* Kanban column scrolling */
+.kanban-column {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* Card drag ghost effect */
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+/* Smooth transitions */
+.kanban-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Detail panel slide animation */
+#detail-panel-container {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Form select styling */
+select {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+}
+
+/* Table row hover */
+tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+/* htmx loading indicator */
+.htmx-request {
+    opacity: 0.7;
+}
+
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}

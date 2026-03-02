@@ -1,0 +1,170 @@
+<div class="p-6">
+    <div class="flex justify-between items-start mb-6">
+        <h2 class="text-xl font-bold text-gray-900">{{ property.address }}</h2>
+        <button onclick="closeDetailPanel()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Property Details -->
+    <div class="space-y-4 mb-6">
+        <div class="text-3xl font-bold text-gray-900">
+            ${{ "{:,.0f}".format(property.price / 100) if property.price else 'N/A' }}
+        </div>
+
+        <div class="flex space-x-4 text-gray-600">
+            <span>{{ property.beds if property.beds else '-' }} beds</span>
+            <span>{{ property.baths if property.baths else '-' }} baths</span>
+            <span>{{ "{:,}".format(property.sqft) if property.sqft else '-' }} sqft</span>
+        </div>
+
+        <div class="text-sm text-gray-500">
+            {{ property.neighborhood if property.neighborhood else '' }}<br>
+            {{ property.city }}{% if property.zip_code %}, {{ property.zip_code }}{% endif %}
+        </div>
+
+        {% if property.redfin_url %}
+        <a href="{{ property.redfin_url }}" target="_blank"
+           class="inline-block bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700">
+            View on Redfin
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Status Updates -->
+    <div class="space-y-4 border-t pt-4">
+        <h3 class="font-semibold text-gray-900">Status</h3>
+
+        <!-- Market Status -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Market Status</label>
+            <form hx-post="/properties/{{ property.id }}/market" hx-swap="none">
+                <select name="market_status" class="w-full rounded border-gray-300 text-sm"
+                        onchange="this.form.requestSubmit()">
+                    {% for status in market_statuses %}
+                    <option value="{{ status }}" {% if property.market_status.value == status %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- Workflow Status -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Workflow Status</label>
+            <form hx-post="/properties/{{ property.id }}/workflow" hx-swap="none" id="workflow-form-{{ property.id }}">
+                <select name="workflow_status" class="w-full rounded border-gray-300 text-sm"
+                        onchange="handleWorkflowChange(this, {{ property.id }})">
+                    {% for status in workflow_statuses %}
+                    <option value="{{ status }}" {% if property.workflow_status.value == status %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" name="follow_up_date" id="workflow-followup-{{ property.id }}"
+                       value="{{ property.follow_up_date.isoformat() if property.follow_up_date else '' }}">
+            </form>
+        </div>
+
+        {% if property.workflow_status.value == 'Follow Up' %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+            <input type="date" value="{{ property.follow_up_date.isoformat() if property.follow_up_date else '' }}"
+                   class="w-full rounded border-gray-300 text-sm"
+                   onchange="updateFollowupDate({{ property.id }}, this.value)">
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Agent Info -->
+    <div class="space-y-4 border-t pt-4 mt-4">
+        <h3 class="font-semibold text-gray-900">Agent Info</h3>
+        <form hx-post="/properties/{{ property.id }}/agent" hx-swap="none" class="space-y-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Agent Name</label>
+                <input type="text" name="agent_name" value="{{ property.agent_name or '' }}"
+                       class="w-full rounded border-gray-300 text-sm" placeholder="Agent name">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Agent Phone</label>
+                <input type="tel" name="agent_phone" value="{{ property.agent_phone or '' }}"
+                       class="w-full rounded border-gray-300 text-sm" placeholder="(555) 123-4567">
+            </div>
+            <button type="submit" class="w-full bg-gray-200 text-gray-700 py-2 rounded text-sm hover:bg-gray-300">
+                Save Agent Info
+            </button>
+        </form>
+    </div>
+
+    <!-- Price History -->
+    {% if price_history %}
+    <div class="space-y-2 border-t pt-4 mt-4">
+        <h3 class="font-semibold text-gray-900">Price History</h3>
+        <ul class="text-sm space-y-1">
+            {% for history in price_history %}
+            <li class="flex justify-between">
+                <span>${{ "{:,.0f}".format(history.price / 100) }}</span>
+                <span class="text-gray-500">{{ history.recorded_at.strftime('%b %d, %Y') }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Notes -->
+    <div class="space-y-2 border-t pt-4 mt-4">
+        <h3 class="font-semibold text-gray-900">Notes</h3>
+        <form hx-post="/properties/{{ property.id }}/notes"
+              hx-target="#notes-list-{{ property.id }}"
+              hx-swap="innerHTML"
+              class="flex space-x-2">
+            <input type="text" name="content" placeholder="Add a note..."
+                   class="flex-1 rounded border-gray-300 text-sm">
+            <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                Add
+            </button>
+        </form>
+        <div id="notes-list-{{ property.id }}">
+            {% include "partials/notes_list.html" %}
+        </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="text-xs text-gray-400 border-t pt-4 mt-4 space-y-1">
+        <div>First seen: {{ property.first_seen.strftime('%b %d, %Y') if property.first_seen else 'Unknown' }}</div>
+        <div>Last seen: {{ property.last_seen.strftime('%b %d, %Y') if property.last_seen else 'Unknown' }}</div>
+        <div>Days on market: {{ property.days_on_market if property.days_on_market else '-' }}</div>
+    </div>
+</div>
+
+<script>
+function handleWorkflowChange(select, propertyId) {
+    if (select.value === 'Follow Up') {
+        const date = prompt('Enter follow-up date (YYYY-MM-DD):');
+        if (date) {
+            document.getElementById('workflow-followup-' + propertyId).value = date;
+            select.form.requestSubmit();
+        } else {
+            // Reset to previous value
+            location.reload();
+        }
+    } else {
+        document.getElementById('workflow-followup-' + propertyId).value = '';
+        select.form.requestSubmit();
+    }
+}
+
+function updateFollowupDate(propertyId, date) {
+    const formData = new FormData();
+    formData.append('workflow_status', 'Follow Up');
+    formData.append('follow_up_date', date);
+
+    fetch('/properties/' + propertyId + '/workflow', {
+        method: 'POST',
+        body: formData
+    });
+}
+</script>

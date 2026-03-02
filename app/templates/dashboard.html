@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Property Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm font-medium text-gray-500">Total Properties</div>
+            <div class="mt-2 text-3xl font-bold text-gray-900">{{ stats.total }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm font-medium text-gray-500">New</div>
+            <div class="mt-2 text-3xl font-bold text-blue-600">{{ stats.by_workflow.get('New', 0) }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm font-medium text-gray-500">To Call</div>
+            <div class="mt-2 text-3xl font-bold text-yellow-600">{{ stats.by_workflow.get('Call', 0) }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="text-sm font-medium text-gray-500">Follow Up</div>
+            <div class="mt-2 text-3xl font-bold text-green-600">{{ stats.by_workflow.get('Follow Up', 0) }}</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Follow-ups Due -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">Follow-ups Due</h2>
+            </div>
+            <div class="p-6">
+                {% if followups %}
+                <ul class="divide-y divide-gray-200">
+                    {% for property in followups %}
+                    <li class="py-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <a href="/properties/{{ property.id }}" class="text-blue-600 hover:underline font-medium">
+                                    {{ property.address }}
+                                </a>
+                                <p class="text-sm text-gray-500">
+                                    Due: {{ property.follow_up_date.strftime('%b %d, %Y') if property.follow_up_date else 'Not set' }}
+                                </p>
+                            </div>
+                            <span class="text-lg font-semibold text-gray-900">
+                                ${{ "{:,.0f}".format(property.price / 100) if property.price else 'N/A' }}
+                            </span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No follow-ups due</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- New Properties -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-medium text-gray-900">Newest Properties</h2>
+            </div>
+            <div class="p-6">
+                {% if new_properties %}
+                <ul class="divide-y divide-gray-200">
+                    {% for property in new_properties %}
+                    <li class="py-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <a href="/properties/{{ property.id }}" class="text-blue-600 hover:underline font-medium">
+                                    {{ property.address }}
+                                </a>
+                                <p class="text-sm text-gray-500">
+                                    {{ property.beds }}bd / {{ property.baths }}ba / {{ "{:,}".format(property.sqft) if property.sqft else '?' }} sqft
+                                </p>
+                            </div>
+                            <span class="text-lg font-semibold text-gray-900">
+                                ${{ "{:,.0f}".format(property.price / 100) if property.price else 'N/A' }}
+                            </span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No new properties</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Status Summary -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Market Status</h2>
+        <div class="flex space-x-8">
+            <div>
+                <span class="text-sm text-gray-500">Active</span>
+                <span class="ml-2 text-xl font-bold text-green-600">{{ stats.by_market.get('Active', 0) }}</span>
+            </div>
+            <div>
+                <span class="text-sm text-gray-500">Pending</span>
+                <span class="ml-2 text-xl font-bold text-yellow-600">{{ stats.by_market.get('Pending', 0) }}</span>
+            </div>
+            <div>
+                <span class="text-sm text-gray-500">Sold</span>
+                <span class="ml-2 text-xl font-bold text-red-600">{{ stats.by_market.get('Sold', 0) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

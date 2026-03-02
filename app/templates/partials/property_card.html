@@ -1,0 +1,26 @@
+<div class="kanban-card bg-white rounded-lg shadow p-4 mb-2 cursor-move"
+     data-id="{{ property.id }}"
+     hx-get="/properties/{{ property.id }}"
+     hx-target="#detail-panel"
+     hx-swap="innerHTML">
+    <div class="font-medium text-gray-900 text-sm">{{ property.address }}</div>
+    <div class="mt-1 text-lg font-bold text-gray-900">
+        ${{ "{:,.0f}".format(property.price / 100) if property.price else 'N/A' }}
+    </div>
+    <div class="mt-1 text-xs text-gray-500">
+        {{ property.beds }}bd / {{ property.baths }}ba / {{ "{:,}".format(property.sqft) if property.sqft else '?' }} sqft
+    </div>
+    {% if property.follow_up_date %}
+    <div class="mt-2 text-xs text-orange-600">
+        Follow up: {{ property.follow_up_date.strftime('%b %d') }}
+    </div>
+    {% endif %}
+    <div class="mt-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+            {% if property.market_status.value == 'Active' %}bg-green-100 text-green-800
+            {% elif property.market_status.value == 'Pending' %}bg-yellow-100 text-yellow-800
+            {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ property.market_status.value }}
+        </span>
+    </div>
+</div>
