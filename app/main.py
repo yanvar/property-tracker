@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.database import init_db
+from app.database import init_db, run_migrations
 from app.routers import dashboard, kanban, properties, import_csv
 
 app = FastAPI(title="Property Tracker", version="1.0.0")
@@ -18,5 +18,10 @@ app.include_router(import_csv.router)
 
 @app.on_event("startup")
 async def startup():
-    """Initialize database on startup."""
+    """Initialize database and run migrations on startup."""
     init_db()
+    try:
+        run_migrations()
+    except Exception as e:
+        # Log but don't fail - migrations may already be applied
+        print(f"Migration note: {e}")

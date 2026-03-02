@@ -31,3 +31,12 @@ def get_db():
 def init_db():
     from app.models import property  # noqa: F401
     Base.metadata.create_all(bind=engine)
+
+
+def run_migrations():
+    """Run Alembic migrations to update database schema."""
+    from alembic.config import Config
+    from alembic import command
+
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
