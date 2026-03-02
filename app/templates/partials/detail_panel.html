@@ -25,12 +25,22 @@
             {{ property.city }}{% if property.zip_code %}, {{ property.zip_code }}{% endif %}
         </div>
 
-        {% if property.redfin_url %}
-        <a href="{{ property.redfin_url }}" target="_blank"
-           class="inline-block bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700">
-            View on Redfin
-        </a>
-        {% endif %}
+        <div class="flex space-x-2">
+            {% if property.redfin_url %}
+            <a href="{{ property.redfin_url }}" target="_blank"
+               class="inline-block bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700">
+                Redfin
+            </a>
+            {% endif %}
+            {% set zillow_address = property.address | replace(" ", "-") | replace("#", "") | replace(",", "") %}
+            {% set zillow_city = property.city | replace(" ", "-") if property.city else "Cleveland" %}
+            {% set zillow_state = property.state if property.state else "OH" %}
+            <a href="https://www.zillow.com/homes/{{ zillow_address }}-{{ zillow_city }}-{{ zillow_state }}-{{ property.zip_code }}_rb/"
+               target="_blank"
+               class="inline-block bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                Zillow
+            </a>
+        </div>
     </div>
 
     <!-- Status Updates -->

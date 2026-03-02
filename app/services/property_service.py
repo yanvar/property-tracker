@@ -225,7 +225,7 @@ class PropertyService:
 
                     # Update fields
                     update_fields = ["price", "beds", "baths", "sqft", "price_per_sqft",
-                                   "days_on_market", "neighborhood", "redfin_url"]
+                                   "days_on_market", "neighborhood", "redfin_url", "state"]
                     for field in update_fields:
                         if data.get(field) is not None:
                             setattr(existing, field, data[field])

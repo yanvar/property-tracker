@@ -70,6 +70,16 @@ def extract_city_from_url(url: str) -> str | None:
     return None
 
 
+def extract_state_from_url(url: str) -> str | None:
+    """Extract state from Redfin URL like https://www.redfin.com/OH/Cleveland/..."""
+    if not url:
+        return None
+    match = re.search(r'redfin\.com/([A-Z]{2})/', url)
+    if match:
+        return match.group(1)
+    return None
+
+
 def extract_zip_from_url(url: str) -> str | None:
     """Extract zip code from Redfin URL like .../6749-Rockridge-Ct-44130/..."""
     if not url:
@@ -111,6 +121,7 @@ def parse_redfin_csv(csv_content: str) -> List[Dict[str, Any]]:
             "address": address,
             "redfin_url": redfin_url,
             "city": extract_city_from_url(redfin_url),
+            "state": extract_state_from_url(redfin_url),
             "zip_code": extract_zip_from_url(redfin_url),
             "neighborhood": str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else None,
             "price": parse_price(str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""),

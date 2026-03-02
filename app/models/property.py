@@ -25,6 +25,7 @@ class Property(Base):
     id = Column(Integer, primary_key=True, index=True)
     address = Column(String(255), nullable=False, index=True)
     city = Column(String(100))
+    state = Column(String(2))
     zip_code = Column(String(10), index=True)
     neighborhood = Column(String(255))
 
