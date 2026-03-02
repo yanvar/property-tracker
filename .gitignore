@@ -24,8 +24,7 @@ ENV/
 data/
 
 # Alembic
-alembic/versions/*.py
-!alembic/versions/__init__.py
+# Migration files should be committed
 
 # OS
 .DS_Store
