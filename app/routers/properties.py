@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import date
 
 from app.database import get_db
 from app.services.property_service import PropertyService
@@ -115,6 +116,7 @@ async def property_detail(
             "notes": notes,
             "workflow_statuses": [s.value for s in WorkflowStatus],
             "market_statuses": [s.value for s in MarketStatus],
+            "today": date.today(),
         }
     )
 

@@ -70,11 +70,17 @@
         </div>
 
         {% if property.workflow_status.value == 'Follow Up' %}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+        {% set is_overdue = property.follow_up_date and today and property.follow_up_date <= today %}
+        <div class="{% if is_overdue %}bg-red-50 border border-red-300 rounded p-3 -mx-1{% endif %}">
+            <label class="block text-sm font-medium {% if is_overdue %}text-red-700{% else %}text-gray-700{% endif %} mb-1">
+                Follow-up Date {% if is_overdue %}(OVERDUE){% endif %}
+            </label>
             <input type="date" value="{{ property.follow_up_date.isoformat() if property.follow_up_date else '' }}"
-                   class="w-full rounded border-gray-300 text-sm"
+                   class="w-full rounded text-sm {% if is_overdue %}border-red-400 bg-red-50{% else %}border-gray-300{% endif %}"
                    onchange="updateFollowupDate({{ property.id }}, this.value)">
+            {% if is_overdue %}
+            <p class="text-xs text-red-600 mt-1">This follow-up is overdue. Update the date or change the status.</p>
+            {% endif %}
         </div>
         {% endif %}
     </div>

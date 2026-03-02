@@ -18,7 +18,9 @@
                 </div>
                 <div class="p-2 min-h-[500px] kanban-column" data-status="{{ status }}">
                     {% for property in columns[status] %}
-                    <div class="kanban-card bg-white rounded-lg shadow p-4 mb-2 cursor-move"
+                    {% set is_expired = property.follow_up_date and today and property.follow_up_date <= today %}
+                    <div class="kanban-card rounded-lg shadow p-4 mb-2 cursor-move
+                                {% if is_expired %}bg-red-50 border-2 border-red-400{% else %}bg-white{% endif %}"
                          data-id="{{ property.id }}"
                          hx-get="/properties/{{ property.id }}"
                          hx-target="#detail-panel"
@@ -31,8 +33,8 @@
                             {{ property.beds }}bd / {{ property.baths }}ba / {{ "{:,}".format(property.sqft) if property.sqft else '?' }} sqft
                         </div>
                         {% if property.follow_up_date %}
-                        <div class="mt-2 text-xs text-orange-600">
-                            Follow up: {{ property.follow_up_date.strftime('%b %d') }}
+                        <div class="mt-2 text-xs {% if is_expired %}text-red-600 font-bold{% else %}text-orange-600{% endif %}">
+                            Follow up: {{ property.follow_up_date.strftime('%b %d') }}{% if is_expired %} (OVERDUE){% endif %}
                         </div>
                         {% endif %}
                         <div class="mt-2">

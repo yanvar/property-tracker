@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import date
 
 from app.database import get_db
 from app.services.property_service import PropertyService
@@ -12,14 +13,34 @@ router = APIRouter(prefix="/kanban")
 templates = Jinja2Templates(directory="app/templates")
 
 
+def sort_by_expired_first(properties):
+    """Sort properties with expired follow-up dates first."""
+    today = date.today()
+
+    def sort_key(p):
+        if p.follow_up_date:
+            # Expired dates come first (negative days), then by date ascending
+            is_expired = p.follow_up_date <= today
+            return (0 if is_expired else 1, p.follow_up_date)
+        # Properties without follow-up date go last
+        return (2, date.max)
+
+    return sorted(properties, key=sort_key)
+
+
 @router.get("/")
 async def kanban_board(request: Request, db: Session = Depends(get_db)):
     """Kanban board view."""
     service = PropertyService(db)
+    today = date.today()
 
     columns = {}
     for status in WorkflowStatus:
-        columns[status.value] = service.get_all(workflow_status=status)
+        properties = service.get_all(workflow_status=status)
+        # Sort Follow Up column with expired first
+        if status == WorkflowStatus.FOLLOW_UP:
+            properties = sort_by_expired_first(properties)
+        columns[status.value] = properties
 
     return templates.TemplateResponse(
         "kanban.html",
@@ -27,6 +48,7 @@ async def kanban_board(request: Request, db: Session = Depends(get_db)):
             "request": request,
             "columns": columns,
             "statuses": [s.value for s in WorkflowStatus],
+            "today": today,
         }
     )
 
@@ -58,5 +80,5 @@ async def move_property(
 
     return templates.TemplateResponse(
         "partials/property_card.html",
-        {"request": request, "property": property_obj}
+        {"request": request, "property": property_obj, "today": date.today()}
     )
