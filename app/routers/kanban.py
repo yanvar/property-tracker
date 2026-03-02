@@ -63,6 +63,7 @@ async def move_property(
     property_id: int,
     new_status: str = Form(...),
     follow_up_date: Optional[str] = Form(None),
+    skip_reason: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """Move property to a new workflow status (called via htmx)."""
@@ -76,7 +77,8 @@ async def move_property(
     property_obj = service.update_workflow_status(
         property_id,
         status,
-        follow_up_date=follow_up_date
+        follow_up_date=follow_up_date,
+        skip_reason=skip_reason
     )
 
     if not property_obj:

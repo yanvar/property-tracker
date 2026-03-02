@@ -38,6 +38,7 @@ class Property(Base):
     market_status = Column(Enum(MarketStatus), default=MarketStatus.ACTIVE)
     workflow_status = Column(Enum(WorkflowStatus), default=WorkflowStatus.NEW)
     follow_up_date = Column(Date, nullable=True)
+    skip_reason = Column(String(500), nullable=True)
 
     redfin_url = Column(String(512))
 

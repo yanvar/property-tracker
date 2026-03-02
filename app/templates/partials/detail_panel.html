@@ -83,6 +83,13 @@
             {% endif %}
         </div>
         {% endif %}
+
+        {% if property.workflow_status.value == 'Skip' and property.skip_reason %}
+        <div class="bg-gray-50 border border-gray-300 rounded p-3 -mx-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Skip Reason</label>
+            <p class="text-sm text-gray-600">{{ property.skip_reason }}</p>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Agent Info -->
@@ -160,6 +167,24 @@ function handleWorkflowChange(select, propertyId) {
         const date = prompt('Enter follow-up date (YYYY-MM-DD):');
         if (date) {
             document.getElementById('workflow-followup-' + propertyId).value = date;
+            select.form.requestSubmit();
+        } else {
+            // Reset to previous value
+            location.reload();
+        }
+    } else if (select.value === 'Skip') {
+        const reason = prompt('Why are you skipping this property?');
+        if (reason) {
+            // Add skip_reason to form
+            let skipInput = document.getElementById('workflow-skip-' + propertyId);
+            if (!skipInput) {
+                skipInput = document.createElement('input');
+                skipInput.type = 'hidden';
+                skipInput.name = 'skip_reason';
+                skipInput.id = 'workflow-skip-' + propertyId;
+                select.form.appendChild(skipInput);
+            }
+            skipInput.value = reason;
             select.form.requestSubmit();
         } else {
             // Reset to previous value

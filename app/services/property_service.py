@@ -86,6 +86,7 @@ class PropertyService:
         property_id: int,
         new_status: WorkflowStatus,
         follow_up_date: Optional[str] = None,
+        skip_reason: Optional[str] = None,
         source: str = "user"
     ) -> Optional[Property]:
         """Update workflow status with history tracking."""
@@ -106,10 +107,18 @@ class PropertyService:
             self.db.add(history)
 
         property_obj.workflow_status = new_status
+
+        # Handle follow-up date
         if new_status == WorkflowStatus.FOLLOW_UP and follow_up_date:
             property_obj.follow_up_date = datetime.strptime(follow_up_date, "%Y-%m-%d").date()
         elif new_status != WorkflowStatus.FOLLOW_UP:
             property_obj.follow_up_date = None
+
+        # Handle skip reason
+        if new_status == WorkflowStatus.SKIP and skip_reason:
+            property_obj.skip_reason = skip_reason
+        elif new_status != WorkflowStatus.SKIP:
+            property_obj.skip_reason = None
 
         property_obj.updated_at = datetime.utcnow()
         self.db.commit()

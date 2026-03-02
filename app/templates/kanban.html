@@ -79,6 +79,24 @@
         </form>
     </div>
 </div>
+
+<!-- Skip Reason Modal -->
+<div id="skip-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96">
+        <h3 class="text-lg font-medium mb-4">Why are you skipping this property?</h3>
+        <form id="skip-form">
+            <input type="hidden" id="skip-property-id" name="property_id">
+            <textarea id="skip-reason" name="skip_reason" rows="3"
+                      class="w-full border rounded px-3 py-2 mb-4"
+                      placeholder="Enter reason for skipping (e.g., too expensive, bad location, needs too much work...)"
+                      required></textarea>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeSkipModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Skip Property</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -96,7 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // If moving to Follow Up, show date picker
                 if (newStatus === 'Follow Up') {
-                    showFollowupModal(propertyId, newStatus);
+                    showFollowupModal(propertyId);
+                } else if (newStatus === 'Skip') {
+                    showSkipModal(propertyId);
                 } else {
                     moveProperty(propertyId, newStatus);
                 }
@@ -116,11 +136,14 @@ function closeDetailPanel() {
     document.getElementById('detail-panel-container').classList.add('translate-x-full');
 }
 
-function moveProperty(propertyId, newStatus, followUpDate = null) {
+function moveProperty(propertyId, newStatus, followUpDate = null, skipReason = null) {
     const formData = new FormData();
     formData.append('new_status', newStatus);
     if (followUpDate) {
         formData.append('follow_up_date', followUpDate);
+    }
+    if (skipReason) {
+        formData.append('skip_reason', skipReason);
     }
 
     fetch(`/kanban/move/${propertyId}`, {
@@ -134,7 +157,7 @@ function moveProperty(propertyId, newStatus, followUpDate = null) {
     });
 }
 
-function showFollowupModal(propertyId, newStatus) {
+function showFollowupModal(propertyId) {
     document.getElementById('followup-property-id').value = propertyId;
     document.getElementById('followup-modal').classList.remove('hidden');
     document.getElementById('followup-modal').classList.add('flex');
@@ -146,12 +169,34 @@ function closeFollowupModal() {
     location.reload(); // Reload to reset card positions if cancelled
 }
 
+function showSkipModal(propertyId) {
+    document.getElementById('skip-property-id').value = propertyId;
+    document.getElementById('skip-reason').value = '';
+    document.getElementById('skip-modal').classList.remove('hidden');
+    document.getElementById('skip-modal').classList.add('flex');
+}
+
+function closeSkipModal() {
+    document.getElementById('skip-modal').classList.add('hidden');
+    document.getElementById('skip-modal').classList.remove('flex');
+    location.reload(); // Reload to reset card positions if cancelled
+}
+
 document.getElementById('followup-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const propertyId = document.getElementById('followup-property-id').value;
     const followUpDate = document.getElementById('followup-date').value;
     moveProperty(propertyId, 'Follow Up', followUpDate);
     closeFollowupModal();
+});
+
+document.getElementById('skip-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const propertyId = document.getElementById('skip-property-id').value;
+    const skipReason = document.getElementById('skip-reason').value;
+    moveProperty(propertyId, 'Skip', null, skipReason);
+    document.getElementById('skip-modal').classList.add('hidden');
+    document.getElementById('skip-modal').classList.remove('flex');
 });
 
 // Close panel on escape key
