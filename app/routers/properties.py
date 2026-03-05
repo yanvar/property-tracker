@@ -242,7 +242,7 @@ async def delete_note(
     )
 
 
-@router.delete("/bulk")
+@router.post("/bulk-delete")
 async def delete_properties_bulk(
     request: Request,
     body: BulkDeleteRequest,

@@ -231,8 +231,8 @@ function confirmBulkDelete() {
     const propertyIds = getSelectedPropertyIds();
     if (propertyIds.length === 0) return;
 
-    fetch('/properties/bulk', {
-        method: 'DELETE',
+    fetch('/properties/bulk-delete', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
