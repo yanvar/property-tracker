@@ -2,12 +2,17 @@ from fastapi import APIRouter, Request, Depends, Form, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from datetime import date
+from pydantic import BaseModel
 
 from app.database import get_db
 from app.services.property_service import PropertyService
 from app.models import WorkflowStatus, MarketStatus
+
+
+class BulkDeleteRequest(BaseModel):
+    property_ids: List[int]
 
 router = APIRouter(prefix="/properties")
 templates = Jinja2Templates(directory="app/templates")
@@ -235,6 +240,20 @@ async def delete_note(
         "partials/notes_list.html",
         {"request": request, "notes": notes, "property_id": property_id}
     )
+
+
+@router.delete("/bulk")
+async def delete_properties_bulk(
+    request: Request,
+    body: BulkDeleteRequest,
+    db: Session = Depends(get_db)
+):
+    """Delete multiple properties at once."""
+    service = PropertyService(db)
+    result = service.delete_properties_bulk(body.property_ids)
+
+    # Return empty response - the UI will refresh the table
+    return HTMLResponse(content="", status_code=200)
 
 
 @router.delete("/{property_id}")

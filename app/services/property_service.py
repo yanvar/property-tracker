@@ -315,3 +315,23 @@ class PropertyService:
         self.db.delete(property_obj)
         self.db.commit()
         return True
+
+    def delete_properties_bulk(self, property_ids: List[int]) -> Dict[str, Any]:
+        """Delete multiple properties by ID list. Returns summary with deleted count."""
+        deleted_count = 0
+        not_found_ids = []
+
+        for property_id in property_ids:
+            property_obj = self.get_by_id(property_id)
+            if property_obj:
+                self.db.delete(property_obj)
+                deleted_count += 1
+            else:
+                not_found_ids.append(property_id)
+
+        self.db.commit()
+
+        return {
+            "deleted_count": deleted_count,
+            "not_found_ids": not_found_ids
+        }
