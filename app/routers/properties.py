@@ -11,6 +11,48 @@ from app.services.property_service import PropertyService
 from app.models import WorkflowStatus, MarketStatus
 
 
+def calculate_target_price(property_obj):
+    """Calculate target price for investment based on rent estimate and expenses."""
+    if not property_obj.calc_rent_estimate:
+        return {"can_calculate": False, "target_price": None, "noi": None, "actual_yield": None}
+
+    # Convert from storage (cents/basis points) to dollars/percentages
+    monthly_rent = property_obj.calc_rent_estimate / 100
+    rehab = (property_obj.calc_rehab_estimate or 2000000) / 100
+    prop_tax = (property_obj.calc_property_tax or 350000) / 100
+    insurance = (property_obj.calc_insurance or 70000) / 100
+    maintenance = (property_obj.calc_maintenance or 100000) / 100
+    target_yield = (property_obj.calc_target_yield or 700) / 10000
+    broker_fee = (property_obj.calc_broker_fee or 300) / 10000
+    closing_fee = (property_obj.calc_closing_fee or 150) / 10000
+    inspection = (property_obj.calc_inspection or 50000) / 100
+
+    # Calculate NOI (Net Operating Income)
+    annual_rent = monthly_rent * 12 * (23/24)  # vacancy: 1 month every 2 years
+    annual_expenses = prop_tax + insurance + maintenance
+    noi = annual_rent - annual_expenses
+
+    # Calculate target price
+    if target_yield <= 0:
+        return {"can_calculate": False, "target_price": None, "noi": noi, "actual_yield": None}
+
+    target_price = (noi / target_yield - rehab - inspection) / (1 + broker_fee + closing_fee)
+
+    # Also calculate yield at list price if available
+    actual_yield = None
+    if property_obj.price:
+        list_price = property_obj.price / 100
+        total_inv = list_price * (1 + broker_fee + closing_fee) + rehab + inspection
+        actual_yield = (noi / total_inv) * 100 if total_inv > 0 else 0
+
+    return {
+        "can_calculate": True,
+        "target_price": target_price,
+        "noi": noi,
+        "actual_yield": actual_yield
+    }
+
+
 class BulkDeleteRequest(BaseModel):
     property_ids: List[int]
 
@@ -111,6 +153,7 @@ async def property_detail(
 
     price_history = service.get_price_history(property_id)
     notes = service.get_notes(property_id)
+    calculated = calculate_target_price(property_obj)
 
     return templates.TemplateResponse(
         "partials/detail_panel.html",
@@ -119,6 +162,7 @@ async def property_detail(
             "property": property_obj,
             "price_history": price_history,
             "notes": notes,
+            "calculated": calculated,
             "workflow_statuses": [s.value for s in WorkflowStatus],
             "market_statuses": [s.value for s in MarketStatus],
             "today": date.today(),
@@ -202,6 +246,61 @@ async def update_agent_info(
         return HTMLResponse(content="Property not found", status_code=404)
 
     return HTMLResponse(content="Agent info updated", status_code=200)
+
+
+@router.post("/{property_id}/calculator")
+async def update_calculator(
+    request: Request,
+    property_id: int,
+    calc_rent_estimate: Optional[int] = Form(None),
+    calc_rehab_estimate: Optional[int] = Form(None),
+    calc_property_tax: Optional[int] = Form(None),
+    calc_insurance: Optional[int] = Form(None),
+    calc_maintenance: Optional[int] = Form(None),
+    calc_target_yield: Optional[int] = Form(None),
+    calc_broker_fee: Optional[int] = Form(None),
+    calc_closing_fee: Optional[int] = Form(None),
+    calc_inspection: Optional[int] = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Update calculator inputs for a property and return updated results."""
+    service = PropertyService(db)
+
+    update_data = {}
+    if calc_rent_estimate is not None:
+        update_data["calc_rent_estimate"] = calc_rent_estimate
+    if calc_rehab_estimate is not None:
+        update_data["calc_rehab_estimate"] = calc_rehab_estimate
+    if calc_property_tax is not None:
+        update_data["calc_property_tax"] = calc_property_tax
+    if calc_insurance is not None:
+        update_data["calc_insurance"] = calc_insurance
+    if calc_maintenance is not None:
+        update_data["calc_maintenance"] = calc_maintenance
+    if calc_target_yield is not None:
+        update_data["calc_target_yield"] = calc_target_yield
+    if calc_broker_fee is not None:
+        update_data["calc_broker_fee"] = calc_broker_fee
+    if calc_closing_fee is not None:
+        update_data["calc_closing_fee"] = calc_closing_fee
+    if calc_inspection is not None:
+        update_data["calc_inspection"] = calc_inspection
+
+    property_obj = service.update(property_id, update_data)
+
+    if not property_obj:
+        return HTMLResponse(content="Property not found", status_code=404)
+
+    calculated = calculate_target_price(property_obj)
+
+    return templates.TemplateResponse(
+        "partials/investment_calculator.html",
+        {
+            "request": request,
+            "property": property_obj,
+            "calculated": calculated,
+        }
+    )
 
 
 @router.post("/{property_id}/notes")

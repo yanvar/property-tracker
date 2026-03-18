@@ -47,6 +47,17 @@ class Property(Base):
     agent_name = Column(String(255), nullable=True)
     agent_phone = Column(String(50), nullable=True)
 
+    # Investment Calculator fields
+    calc_rent_estimate = Column(Integer, nullable=True)          # Monthly rent in cents
+    calc_rehab_estimate = Column(Integer, default=2000000)       # $20,000 in cents
+    calc_property_tax = Column(Integer, default=350000)          # $3,500 in cents
+    calc_insurance = Column(Integer, default=70000)              # $700 in cents
+    calc_maintenance = Column(Integer, default=100000)           # $1,000 in cents
+    calc_target_yield = Column(Integer, default=700)             # 7% = 700 basis points
+    calc_broker_fee = Column(Integer, default=300)               # 3% = 300 basis points
+    calc_closing_fee = Column(Integer, default=150)              # 1.5% = 150 basis points
+    calc_inspection = Column(Integer, default=50000)             # $500 in cents
+
     first_seen = Column(DateTime, default=datetime.utcnow)
     last_seen = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
