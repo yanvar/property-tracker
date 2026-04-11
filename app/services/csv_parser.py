@@ -91,31 +91,41 @@ def extract_zip_from_url(url: str) -> str | None:
     return None
 
 
+def get_column_value(row, column_name: str) -> str:
+    """Safely get a column value by name, returning empty string if not found or NaN."""
+    if column_name in row.index and pd.notna(row[column_name]):
+        return str(row[column_name]).strip()
+    return ""
+
+
 def parse_redfin_csv(csv_content: str) -> List[Dict[str, Any]]:
     """
     Parse Redfin CSV content and return list of property dictionaries.
 
-    CSV columns:
-    - Column 0: "address" -> address
-    - Column 1: "address href" -> redfin_url (extract city and zip from URL)
-    - Column 2: "location" -> neighborhood
-    - Column 3: "column" -> price
-    - Column 4: "column 2" -> beds
-    - Column 5: "column 3" -> baths
-    - Column 6: "column 4" -> sqft
-    - Column 7: "column 5" -> price_per_sqft
-    - Column 8: "column 6" -> days_on_market
+    Uses column names for robust parsing across different Redfin CSV formats.
+    Column name mapping:
+    - "address" -> address
+    - "address href" -> redfin_url (extract city and zip from URL)
+    - "location" -> neighborhood
+    - "column" -> price
+    - "column 2" -> beds
+    - "column 3" -> baths
+    - "column 4" -> sqft
+    - "column 5" -> price_per_sqft
+    - "column 6" -> days_on_market
     """
     df = pd.read_csv(StringIO(csv_content))
 
     properties = []
     for _, row in df.iterrows():
-        address = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
-        redfin_url = str(row.iloc[1]).strip() if pd.notna(row.iloc[1]) else ""
+        address = get_column_value(row, "address")
+        redfin_url = get_column_value(row, "address href")
 
         # Skip rows without valid addresses
         if not address or address.lower() in ['address', '']:
             continue
+
+        neighborhood = get_column_value(row, "location")
 
         property_data = {
             "address": address,
@@ -123,13 +133,13 @@ def parse_redfin_csv(csv_content: str) -> List[Dict[str, Any]]:
             "city": extract_city_from_url(redfin_url),
             "state": extract_state_from_url(redfin_url),
             "zip_code": extract_zip_from_url(redfin_url),
-            "neighborhood": str(row.iloc[2]).strip() if pd.notna(row.iloc[2]) else None,
-            "price": parse_price(str(row.iloc[3]) if pd.notna(row.iloc[3]) else ""),
-            "beds": parse_beds(str(row.iloc[4]) if pd.notna(row.iloc[4]) else ""),
-            "baths": parse_baths(str(row.iloc[5]) if pd.notna(row.iloc[5]) else ""),
-            "sqft": parse_sqft(str(row.iloc[6]) if pd.notna(row.iloc[6]) else ""),
-            "price_per_sqft": parse_price(str(row.iloc[7]) if pd.notna(row.iloc[7]) else ""),
-            "days_on_market": parse_days_on_market(str(row.iloc[8]) if pd.notna(row.iloc[8]) else ""),
+            "neighborhood": neighborhood if neighborhood else None,
+            "price": parse_price(get_column_value(row, "column")),
+            "beds": parse_beds(get_column_value(row, "column 2")),
+            "baths": parse_baths(get_column_value(row, "column 3")),
+            "sqft": parse_sqft(get_column_value(row, "column 4")),
+            "price_per_sqft": parse_price(get_column_value(row, "column 5")),
+            "days_on_market": parse_days_on_market(get_column_value(row, "column 6")),
         }
 
         properties.append(property_data)
